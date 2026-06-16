@@ -1,48 +1,61 @@
-def get_total_price():
-    total_price_before_vat = input("please type in the full amount: ")
-    if total_price_before_vat[-1] == "$":
-        stripped_total_price_before_vat = total_price_before_vat[:-1]
-        stripped_total_price_before_vat_float = float(stripped_total_price_before_vat)
-    else:
-        stripped_total_price_before_vat_float = float(total_price_before_vat)
-    total_price_int = round(stripped_total_price_before_vat_float * 100) # makes float to int full amount in cents
-    return total_price_int
+def get_net_price():
+    raw_net_price = input("Please type in the full amount: ")
+
+    if raw_net_price[-1] == "$":
+        raw_net_price = raw_net_price[:-1]
+
+    net_price_cents = round(float(raw_net_price) * 100)
+    return net_price_cents
 
 
-def add_taxes(total_price_int, vat=11.5):
-    price_after_vat_int = round(total_price_int * (1+vat/100))
-    vat_amount = price_after_vat_int - total_price_int
-    return price_after_vat_int, vat_amount
+def add_taxes(net_price_cents, vat=11.5):
+    gross_price_cents = round(net_price_cents * (1 + vat / 100))
+    vat_cents = gross_price_cents - net_price_cents
+    return gross_price_cents, vat_cents
 
-def get_amount_received_and_calculate_change(price_after_vat_int):
-    cash_received_before_cleanup = input("Please input the amount of cash paid: ")
 
-    if cash_received_before_cleanup[-1] == "$":
-        cash_received_after_cleanup = cash_received_before_cleanup[:-1]
-    else:
-        cash_received_after_cleanup = cash_received_before_cleanup
+def get_payment_and_change(gross_price_cents):
+    raw_payment = input("Please input the amount of cash paid: ")
 
-    cash_received_float = float(cash_received_after_cleanup) # makes str to float so we can get the full cents amount
-    cash_received_int = round(cash_received_float * 100) # makes float to int full amount in cents
+    if raw_payment[-1] == "$":
+        raw_payment = raw_payment[:-1]
 
-    if cash_received_int < price_after_vat_int:
-        print("the amount you paid doesnt cover your shopping cart. please return some items and chack back later.")
+    payment_cents = round(float(raw_payment) * 100)
+
+    if payment_cents < gross_price_cents:
+        print(
+            "The amount you paid doesn't cover your shopping cart. "
+            "Please return some items and check back later."
+        )
         return None, None
-    change = cash_received_int - price_after_vat_int
-    return cash_received_int, change
+
+    change_cents = payment_cents - gross_price_cents
+    return payment_cents, change_cents
 
 
-def print_vat_and_change_statement(vat_amount, price_after_vat_int, cash_received_int, change):
-    print(f"The total amount of your shopping was {price_after_vat_int/100:.2f}$ after {vat_amount/100:.2f}$ was applied. You paid {cash_received_int/100:.2f}$ and received {change/100:.2f}$ in change")
+def print_receipt(vat_cents, gross_price_cents, payment_cents, change_cents):
+    print(
+        f"The gross price of your shopping was {gross_price_cents / 100:.2f}$, "
+        f"including {vat_cents / 100:.2f}$ VAT. "
+        f"You paid {payment_cents / 100:.2f}$ "
+        f"and received {change_cents / 100:.2f}$ in change."
+    )
 
 
 def main():
-    total_price_int = get_total_price()
-    price_after_vat_int, vat_amount = add_taxes(total_price_int)
-    cash_received_int, change = get_amount_received_and_calculate_change(price_after_vat_int)
-    if change is None:
+    net_price_cents = get_net_price()
+    gross_price_cents, vat_cents = add_taxes(net_price_cents)
+    payment_cents, change_cents = get_payment_and_change(gross_price_cents)
+
+    if change_cents is None:
         return
-    print_vat_and_change_statement(vat_amount, price_after_vat_int, cash_received_int, change)
+
+    print_receipt(
+        vat_cents,
+        gross_price_cents,
+        payment_cents,
+        change_cents
+    )
 
 
 if __name__ == "__main__":
